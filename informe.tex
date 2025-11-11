@@ -1,0 +1,155 @@
+
+% Plantilla de informe de resolución (TP2)
+% Archivo: informe.tex
+% Descripción: plantilla en español para completar el informe de resolución
+% Edítala para añadir tu contenido específico del PDF `tp2.2025.pdf`.
+
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{caption}
+\usepackage{float}
+\usepackage{enumitem}
+\usepackage{microtype}
+\geometry{margin=1in}
+
+% Metadatos (editar según corresponda)
+\newcommand{\titulo}{Informe de resolución -- TP2}
+\newcommand{\autor}{Nombre del autor}
+\newcommand{\asignatura}{Asignatura / Curso}
+\newcommand{\profesor}{Profesor}
+\newcommand{\grupo}{Grupo / Matrícula}
+\newcommand{\fechaentrega}{\today}
+
+\hypersetup{
+	pdftitle={\titulo},
+	pdfauthor={\autor},
+	colorlinks=true,
+	linkcolor=blue,
+	citecolor=blue,
+	urlcolor=blue
+}
+
+\begin{document}
+
+% Portada
+\begin{titlepage}
+	\centering
+	{\scshape\LARGE \asignatura \\\vspace{0.5em}}
+	{\huge\bfseries \titulo \\\vspace{1.5em}}
+	{\Large \autor \\\vspace{0.5em}}
+	{\large \profesor \\\vspace{0.5em}}
+	{\large \grupo \\\vspace{2em}}
+	{\large Fecha: \fechaentrega \\\vfill}
+	\vfill
+\end{titlepage}
+
+% Resumen/Abstract
+\begin{abstract}
+	Escribe aquí un resumen breve (150–250 palabras) que describa el objetivo del problema, la estrategia de resolución y los resultados principales obtenidos a partir del archivo \texttt{tp2.2025.pdf}.
+\end{abstract}
+
+	ableofcontents
+\listoffigures
+\listoftables
+\clearpage
+
+\section{Introducción}
+Explica el objetivo del informe, el contexto del trabajo práctico y una descripción general de lo que el lector encontrará en el documento.
+
+\section{Enunciado del problema}
+\label{sec:enunciado}
+Incluye aquí el enunciado extraído de \texttt{tp2.2025.pdf}. Si lo prefieres, añade una transcripción o un resumen con los datos relevantes (entradas, salidas, restricciones y métricas de evaluación).
+
+Ejemplo de lista de elementos a incluir:
+\begin{itemize}
+	\item Descripción de los datos de entrada
+	\item Parámetros y supuestos
+	\item Objetivo de la resolución
+	\item Criterios de evaluación
+\end{itemize}
+
+\section{Metodología}
+Describe la estrategia seguida para resolver el problema: algoritmos, modelos, reducción a problemas conocidos, heurísticas y justificación de la elección.
+
+\subsection{Modelado matemático}
+Plantea las variables, funciones objetivo, restricciones, y la formulación matemática usada (si aplica).
+
+\subsection{Algoritmo / implementación}
+Explica el algoritmo paso a paso. Si incluyes pseudocódigo, usa un entorno de enumeración o \texttt{listings} para fragmentos de código.
+
+\begin{lstlisting}[language=Python, caption={Ejemplo de pseudocódigo/implementación}]
+def resolver(datos):
+		# Implementación
+		pass
+\end{lstlisting}
+
+\section{Resolución}
+Detalla la resolución propia: pasos realizados, cálculos intermedios, tablas y figuras que muestren resultados parciales.
+
+\subsection{Cálculos y demostraciones}
+Incluye aquí las fórmulas, justificaciones y cualquier demostración necesaria.
+
+\subsection{Resultados intermedios}
+Presenta tablas y gráficas con los resultados relevantes. Usa \verb|\begin{table}| y \verb|\includegraphics| según convenga.
+
+\section{Resultados finales}
+Resume los resultados finales: tablas, métricas y una interpretación clara de los mismos. Señala si los resultados cumplen con los requisitos del enunciado.
+
+\section{Discusión}
+Comenta limitaciones, posibles mejoras, alternativas de solución y análisis de complejidad (si procede).
+
+\section{Conclusiones}
+Resumir los hallazgos principales y destacar conclusiones prácticas y académicas.
+
+\section*{Agradecimientos}
+Opcional: menciona personas o recursos que ayudaron.
+
+\appendix
+\section{Anexos}
+\subsection{Archivos entregables}
+Lista de archivos que acompañan el informe (por ejemplo: \texttt{resolucion.zpl}, código fuente, datos):
+\begin{itemize}
+	\item resolucion.zpl -- Instrucciones/impresión ZPL (si aplica)
+	\item src/ -- Código fuente (si lo incluyes)
+	\item datos/ -- Datos usados
+\end{itemize}
+
+\subsection{Códigos relevantes}
+Incluye fragmentos de código más largos si es necesario o referencia a archivos en el repositorio.
+
+\section{Referencias}
+Incluye aquí las referencias bibliográficas en el formato que prefieras (puedes añadir \texttt{bibtex} si lo deseas).
+
+\bigskip
+\noindent\textbf{Nota:} Completa cada sección con el contenido específico extraído de \texttt{tp2.2025.pdf} y tus soluciones. Esta plantilla está pensada para que la adaptes cómodamente.
+
+\clearpage
+\section*{Instrucciones de compilación}
+\addcontentsline{toc}{section}{Instrucciones de compilación}
+Compilar con \LaTeX{} en Windows (PowerShell):
+\begin{itemize}
+	\item Opción rápida (dos pasadas):
+		\begin{quote}
+			pdflatex -interaction=nonstopmode informe.tex; pdflatex -interaction=nonstopmode informe.tex
+		\end{quote}
+	\item Opción recomendada si tienes \texttt{latexmk} instalado:
+		\begin{quote}
+			latexmk -pdf -pdflatex="pdflatex -interaction=nonstopmode" informe.tex
+		\end{quote}
+	\item Si usas bibliografía (BibTeX):
+		\begin{quote}
+			pdflatex informe.tex; bibtex informe; pdflatex informe.tex; pdflatex informe.tex
+		\end{quote}
+\end{itemize}
+
+\vfill
+\end{document}
+
