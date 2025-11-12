@@ -1,12 +1,7 @@
-
 % Plantilla de informe de resolución (TP2)
-% Archivo: informe.tex
-% Descripción: plantilla en español para completar el informe de resolución
-% Edítala para añadir tu contenido específico del PDF `tp2.2025.pdf`.
 
 \documentclass[12pt,a4paper]{article}
 \usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
 \usepackage[spanish]{babel}
 \usepackage{amsmath,amsfonts,amssymb}
 \usepackage{graphicx}
@@ -22,11 +17,8 @@
 
 % Metadatos (editar según corresponda)
 \newcommand{\titulo}{Informe de resolución -- TP2}
-\newcommand{\autor}{Nombre del autor}
-\newcommand{\asignatura}{Asignatura / Curso}
-\newcommand{\profesor}{Profesor}
-\newcommand{\grupo}{Grupo / Matrícula}
-\newcommand{\fechaentrega}{\today}
+\newcommand{\autor}{Mariño Martina, Martinez Kiara, Taié Colette}
+\newcommand{\asignatura}{Aplicaciones Computacionales en Negocios}
 
 \hypersetup{
 	pdftitle={\titulo},
@@ -42,114 +34,53 @@
 % Portada
 \begin{titlepage}
 	\centering
-	{\scshape\LARGE \asignatura \\\vspace{0.5em}}
-	{\huge\bfseries \titulo \\\vspace{1.5em}}
-	{\Large \autor \\\vspace{0.5em}}
-	{\large \profesor \\\vspace{0.5em}}
-	{\large \grupo \\\vspace{2em}}
-	{\large Fecha: \fechaentrega \\\vfill}
-	\vfill
+	{\scshape\LARGE \asignatura \par\vspace{0.5em}}
+	{\huge\bfseries \titulo \par\vspace{1.5em}}
+	{\Large \autor \par\vspace{0.5em}}
 \end{titlepage}
 
-% Resumen/Abstract
-\begin{abstract}
-	Escribe aquí un resumen breve (150–250 palabras) que describa el objetivo del problema, la estrategia de resolución y los resultados principales obtenidos a partir del archivo \texttt{tp2.2025.pdf}.
-\end{abstract}
-
-	ableofcontents
+% Índices
+\tableofcontents
 \listoffigures
 \listoftables
 \clearpage
 
 \section{Introducción}
-Explica el objetivo del informe, el contexto del trabajo práctico y una descripción general de lo que el lector encontrará en el documento.
+El presente informe corresponde al segundo trabajo práctico de la materia \textit{Aplicaciones Computacionales en Negocios}. El objetivo general es aplicar los conceptos de programación lineal y entera para modelar y resolver problemas de optimización vinculados a la gestión de recursos, planificación y toma de decisiones en entornos empresariales.
+A lo largo del informe se presentan los distintos modelos desarrollados, comenzando por formulaciones lineales y extendiéndose a versiones con variables enteras y binarias. Cada modelo se formula matemáticamente, se implementa en el lenguaje \texttt{ZIMPL} y se resuelve mediante el solver \texttt{SCIP}, analizando los resultados obtenidos y las decisiones óptimas que surgen de cada caso.
+El documento está estructurado en secciones que describen los modelos planteados, los resultados de las simulaciones y una discusión final sobre las conclusiones y aprendizajes obtenidos del trabajo.
 
-\section{Enunciado del problema}
-\label{sec:enunciado}
-Incluye aquí el enunciado extraído de \texttt{tp2.2025.pdf}. Si lo prefieres, añade una transcripción o un resumen con los datos relevantes (entradas, salidas, restricciones y métricas de evaluación).
-
-Ejemplo de lista de elementos a incluir:
+\section{Consigna 1: Asignación de parciales}
+\subsection{Definición de conjuntos, parámetros y variables}
+Para comenzar, definiremos los conjuntos con los que vamos a trabajar a lo largo del proyecto:
 \begin{itemize}
-	\item Descripción de los datos de entrada
-	\item Parámetros y supuestos
-	\item Objetivo de la resolución
-	\item Criterios de evaluación
+    \item $P$: Conjunto de parciales (índices p), que interpretaremos como un equivalente a conjunto de cursos (dado que solo hay un parcial por curso).
+    \item $D$: Conjunto de días disponibles para asignar parciales, donde $D = (1, 2, 3, \dots, 12) - (6, 7, 8)$
+    \item $T$: Horarios disponibles por días, donde $T = (9, 12, 15, 18)$ (índices t)
+		\item $S$: Conjunto de slots, donde $S = D \times T$
+    \item $a_p \in Z_+$: Número de aulas que requiere el parcial $p \ \ \forall \ \ p \in P$ 
+    \item $A$: Aulas totales disponibles en cada slot ($A = 75$)
+    \item $E$: Conjunto de pares incompatibles $(p, q)$. Si $(p, q) \in E \rightarrow $ no pueden coincidir en el mismo slot.
 \end{itemize}
 
-\section{Metodología}
-Describe la estrategia seguida para resolver el problema: algoritmos, modelos, reducción a problemas conocidos, heurísticas y justificación de la elección.
+	Ahora, tendremos la variable indicadora $x_{p,s} \in \{0,1\}$ que nos señala si un parcial $p$ está asignado al slot $s$. $x_{p,s} = 1$ si el parcial se programa en el slot $s = (d, t)$, y 0 en caso contrario.
 
-\subsection{Modelado matemático}
-Plantea las variables, funciones objetivo, restricciones, y la formulación matemática usada (si aplica).
+\subsection{Función objetivo y restricciones}
+\textbf{Función objetivo:} maximizar la cantidad de parciales asignados.
+\begin{equation}
+\max \sum_{p \in P} \sum_{s \in S} x_{p,s}
+\end{equation}
+Sujeto a:
+\begin{align}
+\\text{(1)} \quad & \sum_{s \in S} x_{p,s} \le 1 && \forall p \in P \\
+\\text{(2)} \quad & \sum_{p \in P} a_p \, x_{p,s} \le 75 && \forall s \in S \\
+\\text{(3)} \quad & x_{p,s} + x_{q,s} \le 1 && \forall (p,q) \in E, \, \forall s \in S \\
+\\text{(4)} \quad & x_{p,s} \in \{0,1\} && \forall p \in P, \, \forall s \in S
+\end{align}
 
-\subsection{Algoritmo / implementación}
-Explica el algoritmo paso a paso. Si incluyes pseudocódigo, usa un entorno de enumeración o \texttt{listings} para fragmentos de código.
-
-\begin{lstlisting}[language=Python, caption={Ejemplo de pseudocódigo/implementación}]
-def resolver(datos):
-		# Implementación
-		pass
-\end{lstlisting}
-
-\section{Resolución}
-Detalla la resolución propia: pasos realizados, cálculos intermedios, tablas y figuras que muestren resultados parciales.
-
-\subsection{Cálculos y demostraciones}
-Incluye aquí las fórmulas, justificaciones y cualquier demostración necesaria.
-
-\subsection{Resultados intermedios}
-Presenta tablas y gráficas con los resultados relevantes. Usa \verb|\begin{table}| y \verb|\includegraphics| según convenga.
-
-\section{Resultados finales}
-Resume los resultados finales: tablas, métricas y una interpretación clara de los mismos. Señala si los resultados cumplen con los requisitos del enunciado.
-
-\section{Discusión}
-Comenta limitaciones, posibles mejoras, alternativas de solución y análisis de complejidad (si procede).
-
+\section{Consigna 2: Extensión con restricción adicional}
+\section{Consigna 3: Maximización de la separación temporal}
+\section{Resultados generales y discusión}
 \section{Conclusiones}
-Resumir los hallazgos principales y destacar conclusiones prácticas y académicas.
 
-\section*{Agradecimientos}
-Opcional: menciona personas o recursos que ayudaron.
-
-\appendix
-\section{Anexos}
-\subsection{Archivos entregables}
-Lista de archivos que acompañan el informe (por ejemplo: \texttt{resolucion.zpl}, código fuente, datos):
-\begin{itemize}
-	\item resolucion.zpl -- Instrucciones/impresión ZPL (si aplica)
-	\item src/ -- Código fuente (si lo incluyes)
-	\item datos/ -- Datos usados
-\end{itemize}
-
-\subsection{Códigos relevantes}
-Incluye fragmentos de código más largos si es necesario o referencia a archivos en el repositorio.
-
-\section{Referencias}
-Incluye aquí las referencias bibliográficas en el formato que prefieras (puedes añadir \texttt{bibtex} si lo deseas).
-
-\bigskip
-\noindent\textbf{Nota:} Completa cada sección con el contenido específico extraído de \texttt{tp2.2025.pdf} y tus soluciones. Esta plantilla está pensada para que la adaptes cómodamente.
-
-\clearpage
-\section*{Instrucciones de compilación}
-\addcontentsline{toc}{section}{Instrucciones de compilación}
-Compilar con \LaTeX{} en Windows (PowerShell):
-\begin{itemize}
-	\item Opción rápida (dos pasadas):
-		\begin{quote}
-			pdflatex -interaction=nonstopmode informe.tex; pdflatex -interaction=nonstopmode informe.tex
-		\end{quote}
-	\item Opción recomendada si tienes \texttt{latexmk} instalado:
-		\begin{quote}
-			latexmk -pdf -pdflatex="pdflatex -interaction=nonstopmode" informe.tex
-		\end{quote}
-	\item Si usas bibliografía (BibTeX):
-		\begin{quote}
-			pdflatex informe.tex; bibtex informe; pdflatex informe.tex; pdflatex informe.tex
-		\end{quote}
-\end{itemize}
-
-\vfill
 \end{document}
-
