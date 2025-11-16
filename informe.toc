@@ -1,0 +1,9 @@
+\babel@toc {spanish}{}\relax 
+\contentsline {section}{\numberline {1}Consigna 1: Asignación de parciales}{2}{section.1}%
+\contentsline {subsection}{\numberline {1.1}Definición de conjuntos, parámetros y variables}{2}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}Razonamiento detrás de la función objetivo}{2}{subsection.1.2}%
+\contentsline {section}{\numberline {2}Consigna 2: Extensión con restricción adicional}{3}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Razonamiento detrás del modelo}{3}{subsection.2.1}%
+\contentsline {section}{\numberline {3}Consigna 3: Maximización de la separación temporal}{4}{section.3}%
+\contentsline {section}{\numberline {4}Resultados generales y discusión}{4}{section.4}%
+\contentsline {section}{\numberline {5}Conclusiones}{4}{section.5}%

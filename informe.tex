@@ -45,40 +45,88 @@
 \listoftables
 \clearpage
 
-\section{Introducción}
-El presente informe corresponde al segundo trabajo práctico de la materia \textit{Aplicaciones Computacionales en Negocios}. El objetivo general es aplicar los conceptos de programación lineal y entera para modelar y resolver problemas de optimización vinculados a la gestión de recursos, planificación y toma de decisiones en entornos empresariales.
-A lo largo del informe se presentan los distintos modelos desarrollados, comenzando por formulaciones lineales y extendiéndose a versiones con variables enteras y binarias. Cada modelo se formula matemáticamente, se implementa en el lenguaje \texttt{ZIMPL} y se resuelve mediante el solver \texttt{SCIP}, analizando los resultados obtenidos y las decisiones óptimas que surgen de cada caso.
-El documento está estructurado en secciones que describen los modelos planteados, los resultados de las simulaciones y una discusión final sobre las conclusiones y aprendizajes obtenidos del trabajo.
-
 \section{Consigna 1: Asignación de parciales}
+
 \subsection{Definición de conjuntos, parámetros y variables}
-Para comenzar, definiremos los conjuntos con los que vamos a trabajar a lo largo del proyecto:
+Para comenzar, definiremos los conjuntos con los que vamos a trabajar a lo largo del proyecto (algunos de ellos mencionados en el enunciado):
 \begin{itemize}
     \item $P$: Conjunto de parciales (índices p), que interpretaremos como un equivalente a conjunto de cursos (dado que solo hay un parcial por curso).
     \item $D$: Conjunto de días disponibles para asignar parciales, donde $D = (1, 2, 3, \dots, 12) - (6, 7, 8)$
     \item $T$: Horarios disponibles por días, donde $T = (9, 12, 15, 18)$ (índices t)
-		\item $S$: Conjunto de slots, donde $S = D \times T$
     \item $a_p \in Z_+$: Número de aulas que requiere el parcial $p \ \ \forall \ \ p \in P$ 
     \item $A$: Aulas totales disponibles en cada slot ($A = 75$)
     \item $E$: Conjunto de pares incompatibles $(p, q)$. Si $(p, q) \in E \rightarrow $ no pueden coincidir en el mismo slot.
 \end{itemize}
 
-	Ahora, tendremos la variable indicadora $x_{p,s} \in \{0,1\}$ que nos señala si un parcial $p$ está asignado al slot $s$. $x_{p,s} = 1$ si el parcial se programa en el slot $s = (d, t)$, y 0 en caso contrario.
+Ahora, tambien definimos la variable indicadora $x_{p,d,t} \in \{0,1\}$ que nos señala si un parcial $p$ está asignado al slot $d,t$. $x_{p,d,t} = 1$ si el parcial se programa en el slot $(d, t)$, y 0 en caso contrario.
 
-\subsection{Función objetivo y restricciones}
-\textbf{Función objetivo:} maximizar la cantidad de parciales asignados.
-\begin{equation}
-\max \sum_{p \in P} \sum_{s \in S} x_{p,s}
-\end{equation}
-Sujeto a:
-\begin{align}
-\\text{(1)} \quad & \sum_{s \in S} x_{p,s} \le 1 && \forall p \in P \\
-\\text{(2)} \quad & \sum_{p \in P} a_p \, x_{p,s} \le 75 && \forall s \in S \\
-\\text{(3)} \quad & x_{p,s} + x_{q,s} \le 1 && \forall (p,q) \in E, \, \forall s \in S \\
-\\text{(4)} \quad & x_{p,s} \in \{0,1\} && \forall p \in P, \, \forall s \in S
-\end{align}
+\subsection{Razonamiento detrás de la función objetivo}
+
+El objetivo principal del problema planteado es determinar en qué día y horario tomar cada uno de los parciales, respetando restricciones de incompatibilidad y disponibilidad de aulas. El enunciado establece explícitamente que:
+
+\begin{quote}
+“No siempre será posible programar todos los parciales cumpliendo las restricciones, y en ese caso buscamos maximizar la cantidad de parciales programados.”
+\end{quote}
+
+A partir de esta indicación, la función objetivo elegida es:
+
+\begin{equation*}
+\max \sum_{p \in P} \sum_{d \in D} \sum_{t \in T} x_{p,d,t}
+\end{equation*}
+
+\textbf{Sujeto a:}
+
+% Restricción 1
+\begin{equation*}
+\sum_{p\in P} x_{p,d,t} \le 1 
+\qquad \forall p\in P
+\tag{1}
+\end{equation*}
+Que los parciales asignados solo estén asignados a un slot.
+
+% Restricción 2
+\begin{equation*}
+\sum_{p\in P} a_p x_{p,d,t} \le 75 
+\qquad \forall d\in D, \forall t\in T
+\tag{2}
+\end{equation*}
+Que todos los parciales asignados no superen la cantidad de aulas disponibles por día.
+
+% Restricción 3
+\begin{equation*}
+x_{p,d,t} + x_{q,d,t} \le 1 
+\qquad \forall (p,q)\in E, \forall d\in D, \forall t\in T
+\tag{3}
+\end{equation*}
+No pueden haber dos parciales asignados al mismo slot si tienen alumnos que cursan ambas materias.
+
 
 \section{Consigna 2: Extensión con restricción adicional}
+Si bien el enunciado no nos provee información individual sobre qué estudiantes cursan qué materias, sí contamos con el grafo de incompatibilidad $G = (P, E)$, donde cada arista $(p,q)$ indica que los cursos $p$ y $q$ tienen estudiantes en común.
+
+Esta limitación es importante: \textbf{no podemos modelar explícitamente estudiantes individuales}, sino únicamente relaciones entre cursos. Por lo tanto, debemos buscar una forma de asegurar que no existan “tripletes” de parciales mutuamente relacionados que caigan el mismo día.
+\subsection{Razonamiento detrás del modelo}
+
+El enunciado establece que queremos evitar que “haya tres vértices vecinos en $G$ programados un mismo día”. Esto implica que si tres materias $p$, $q$ y $r$ tienen estudiantes en común (es decir, si forman un triángulo en el grafo de incompatibilidad), entonces no pueden ser asignadas todas al mismo día.
+
+Sin embargo, dado que la estructura del grafo no necesariamente es simple, el problema consiste en traducir esa idea a una restricción operativa que use las herramientas disponibles en el modelo.
+
+La clave del razonamiento es:
+
+\begin{itemize}
+\item Para cada parcial $p$, la suma $\sum_{t \in T} x_{p,(d,t)}$ indica si el parcial fue programado en el día $d$.
+\item Si dos cursos $p$ y $q$ son adyacentes en $G$, ya hay una restricción que impide que estén en el mismo \textit{slot}, pero no impide que estén el mismo día en horarios distintos.
+\item Para evitar que un estudiante tenga \textbf{tres parciales el mismo día}, no es suficiente controlar pares: necesitamos controlar \textbf{conjuntos de tres cursos que comparten estudiantes}.
+\end{itemize}
+
+Pero como no conocemos explícitamente esos tripletes, debemos inferirlos del grafo. \\
+
+La aproximación práctica es:
+
+Si un parcial $p$ tiene varios vecinos en el grafo, y tres de ellos se planifican el mismo día, entonces podría existir un estudiante en común afectado. \\
+
+
+Ahora ¿Cómo lo resolvimos?
 \section{Consigna 3: Maximización de la separación temporal}
 \section{Resultados generales y discusión}
 \section{Conclusiones}
