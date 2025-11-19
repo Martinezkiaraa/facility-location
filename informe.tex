@@ -100,7 +100,7 @@ x_{p,d,t} + x_{q,d,t} \le 1
 \end{equation*}
 No pueden haber dos parciales asignados al mismo slot si tienen alumnos que cursan ambas materias.
 
-\section{Resultados y conclusiones}
+\subsection{Resultados y conclusiones}
 El modelo fue ejecutado con los datos provistos y la solución obtenida se exportó a un archivo CSV para facilitar su interpretación y análisis.
 A partir de esta salida, observamos que:
 \begin{itemize}
@@ -110,7 +110,6 @@ A partir de esta salida, observamos que:
     \item Si bien la asignación resultó óptima en cuanto a cantidad de parciales programados, la solución presenta una alta concentración de parciales en los primeros días, lo que es esperable dado 
 	que la función objetivo no penaliza dicha concentración ni incentiva la distribución equitativa a lo largo del calendario.
 \end{itemize}
-
 
 \section{Consigna 2: Extensión con restricción adicional}
 Si bien el enunciado no nos provee información individual sobre qué estudiantes cursan qué materias, sí contamos con el grafo de incompatibilidad $G = (P, E)$, donde cada arista $(p,q)$ indica que los cursos $p$ y $q$ tienen estudiantes en común.
@@ -134,21 +133,30 @@ Pero como no conocemos explícitamente esos tripletes, debemos inferirlos del gr
 
 La aproximación práctica es:
 
-Si un parcial $p$ tiene varios vecinos en el grafo, y tres de ellos se planifican el mismo día, entonces podría existir un estudiante en común afectado. \\
+\textbf{Si un parcial $p$ tiene varios vecinos en el grafo, y tres de ellos se planifican el mismo día, entonces podría existir un estudiante en común afectado.} \\
 
 
 Ahora ¿Cómo lo resolvimos?
+Primero, generamos todos los trios compatibles que compartan al menos algún alumno en común. \\
 
-\section{Resultados y conclusiones}
-El modelo fue ejecutado con los datos provistos y la solución obtenida se exportó a un archivo CSV para facilitar su interpretación y análisis.
-A partir de esta salida, observamos que:
-\begin{itemize}
-    \item Se logró asignar la totalidad de los parciales (208 cursos) a algún día y horario disponible.
-    \item Ningún par de cursos con estudiantes en común fue programado en el mismo día y horario, lo cual confirma que todas las restricciones de incompatibilidad se cumplieron.
-    \item La suma de aulas requeridas en cada slot nunca superó el límite de 75 aulas, por lo que todas las restricciones de capacidad fueron respetadas.
-    \item Si bien la asignación resultó óptima en cuanto a cantidad de parciales programados, la solución presenta una alta concentración de parciales en los primeros días, lo que es esperable dado 
-	que la función objetivo no penaliza dicha concentración ni incentiva la distribución equitativa a lo largo del calendario.
-\end{itemize}
+Luego, sujeto a maximizar la cantidad de parciales:
+
+\begin{equation*}
+\sum_{p, d, t\in P\dot D\dot T}  x_{p,d,t}
+\qquad \forall d\in D, \forall t\in T
+\end{equation*}
+
+Pero, restringiendo que no se pueda asignar un parcial a un día si:
+\begin{equation*}
+    \sum_{t \in T} x_{p,d,t}
+    + \sum_{t \in T} x_{q,d,t}
+    + \sum_{t \in T} x_{r,d,t} \le 2
+\qquad \forall (p,q,r)\in A, \forall d\in D
+\end{equation*}
+
+Volvimos a resolver el modelo con esta modificación y, al igual que en la consigna 1, exportamos la solución a un archivo CSV para analizarla. El resultado muestra que se siguen pudiendo programar los 208 parciales, es decir, la nueva restricción no reduce la cantidad máxima de exámenes que pueden asignarse dentro del calendario disponible.
+
+Sin embargo, la distribución de parciales a lo largo de los días cambia respecto del modelo anterior: se observa una mayor concentración en los primeros días (1 al 5) y una menor utilización de los últimos días (9 al 12). Esto refleja que, al imponer la restricción de tríos, el modelo reorganiza la programación para evitar que un mismo estudiante enfrente tres parciales en un solo día, manteniendo al mismo tiempo la viabilidad del calendario y el cumplimiento de todas las restricciones de incompatibilidad y capacidad de aulas.
 
 \section{Consigna 3: Maximización de la separación temporal}
 \section{Resultados generales y discusión}
