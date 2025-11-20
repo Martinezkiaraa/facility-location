@@ -1,10 +1,9 @@
 import csv
 
 # ==== CONFIGURACIÓN DE ARCHIVOS ====
-SOL_FILE = "solucion2.txt"   # archivo de solución que generaste con SCIP
-CURSOS_FILE = "cursos.dat"   # archivo que usas en ZIMPL para definir P
+SOL_FILE = "solucion2.txt"
+CURSOS_FILE = "cursos.dat"
 CSV_OUT = "tabla_ejercicio2.csv"
-
 
 # 1) Leer los códigos de cursos en el mismo orden que ZIMPL
 cursos = []
@@ -14,7 +13,6 @@ with open(CURSOS_FILE, "r") as f:
         if not line or line.startswith("#"):
             continue
         parts = line.split()
-        # primera columna = código de curso (lo que usaste en P)
         cursos.append(parts[0])
 
 # 2) Leer la solución de SCIP y extraer las X[p,d,t] = 1

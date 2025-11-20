@@ -1,7 +1,3 @@
-#############################
-# CONJUNTOS Y PARÁMETROS
-#############################
-
 # Cursos
 set P := { read "cursos.dat" as "<1s>" };
 
@@ -21,45 +17,88 @@ param A_S := 75;
 # E contiene las aristas del grafo de conflictos
 set E := { read "estudiantes-en-comun.dat" as "<1s,2s>" };
 
-# pares de días consecutivos en el calendario efectivo
-set ADJ := {
-  <1,2>, <2,3>, <3,4>, <4,5>,
-  <9,10>, <10,11>, <11,12>
-};
+# Peso: cantidad de estudiantes en común
+param I[E] := read "estudiantes-en-comun.dat" as "<1s,2s> 3n";
 
-# w[p,q] = cantidad de estudiantes en común entre p y q
-param w[E] := read "estudiantes-en-comun.dat" as "<1s,2s> 3n";
+#############################
+# VARIABLES
+#############################
 
-var X[P*D*T] binary;
-var Z[P*D] binary;   #Si p está en algún turno de ese día → la suma vale 1 → Z[p,d] = 1
-                     #Si no está en ningún turno → suma 0 → Z[p,d] = 0
+var X[P * D * T] binary;
 
-minimize JuntosConPeso:
-  sum <p,q,d1,d2> in E * ADJ:
-    w[p,q] * Yadj[p,q,d1,d2];
+var Z[E * D * D] binary;
 
+#############################
+# OBJETIVO – CONSIGNA 3
+#############################
+# Maximizar la "dispersión": penalizamos estar cerca y premiamos estar lejos.
+# Peso = cantidad de estudiantes en común (I[p,q])
+#############################
+
+maximize Dispersion:
+    sum <p,q,d1,d2> in E * D * D:
+        I[p,q] * abs(d1 - d2) * Z[p,q,d1,d2];
+
+#############################
+# RESTRICCIONES
+#############################
+
+###############
+# Cada parcial se toma a lo sumo una vez
+###############
 subto UnSlot:
   forall <p> in P do
     sum <d,t> in D * T: X[p,d,t] <= 1;
 
-subto Enlace_ZX:
-  forall <p> in P do
+###############
+# Capacidad de aulas
+###############
+subto Capacidad:
+  forall <d,t> in D * T do
+    sum <p> in P: a[p] * X[p,d,t] <= A_S;
+
+###############
+# 1. El MISMO DÍA prohibido
+###############
+subto NoMismoDia:
+  forall <p,q> in E do
     forall <d> in D do
-      sum <t> in T: X[p,d,t] == Z[p,d];
+      (sum <t> in T: X[p,d,t])
+    + (sum <t> in T: X[q,d,t]) <= 1;
 
-var Yadj[E*ADJ] binary;   # Yadj[p,q,(d1,d2)] = 1 si p en d1 y q en d2
+set DC := {
+    <1,2>, <1,3>, <2,3>, <2,4>, <3,4>, <3,5>, <4,5>,
+    <9,10>, <9,11>, <10,11>, <10, 12>, <11,12>
+};
 
-subto Link_Yadj_le_p:
+###############
+# 2. 2 días de por medio
+###############
+subto NoCercanos_1:
   forall <p,q> in E do
-    forall <d1,d2> in ADJ do
-      Yadj[p,q,d1,d2] <= Z[p,d1];
+    forall <d1,d2> in DC do
+        (sum <t> in T: X[p,d1,t])
+      + (sum <t> in T: X[q,d2,t]) <= 1;
 
-subto Link_Yadj_le_q:
+subto NoCercanos_2:
   forall <p,q> in E do
-    forall <d1,d2> in ADJ do
-      Yadj[p,q,d1,d2] <= Z[q,d2];
+    forall <d1,d2> in DC do
+        (sum <t> in T: X[p,d2,t])
+      + (sum <t> in T: X[q,d1,t]) <= 1;
 
-subto Link_Yadj_ge:
-  forall <p,q> in E do
-    forall <d1,d2> in ADJ do
-      Yadj[p,q,d1,d2] >= Z[p,d1] + Z[q,d2] - 1;
+###############################################################
+# Z[p,q,d1,d2] = 1 <=> p está asignado al día d1 y q en d2
+###############################################################
+subto LinkZ1:
+  forall <p,q,d1,d2> in E * D * D do
+    Z[p,q,d1,d2] <= sum <t> in T: X[p,d1,t];
+
+subto LinkZ2:
+  forall <p,q,d1,d2> in E * D * D do
+    Z[p,q,d1,d2] <= sum <t> in T: X[q,d2,t];
+
+subto LinkZ3:
+  forall <p,q,d1,d2> in E * D * D do
+    Z[p,q,d1,d2] >=
+      (sum <t> in T: X[p,d1,t])
+    + (sum <t> in T: X[q,d2,t]) - 1;
