@@ -1,3 +1,4 @@
+#VERSIÓN SIN RESTRICCION MÍNIMA DE DÍAS CON 208 FIJADO
 # Cursos
 set P := { read "cursos.dat" as "<1s>" };
 
@@ -28,6 +29,7 @@ var X[P * D * T] binary;
 
 var Z[E * D * D] binary;
 
+
 #############################
 # OBJETIVO – CONSIGNA 3
 #############################
@@ -57,34 +59,11 @@ subto Capacidad:
   forall <d,t> in D * T do
     sum <p> in P: a[p] * X[p,d,t] <= A_S;
 
-###############
-# 1. El MISMO DÍA prohibido
-###############
-subto NoMismoDia:
-  forall <p,q> in E do
-    forall <d> in D do
-      (sum <t> in T: X[p,d,t])
-    + (sum <t> in T: X[q,d,t]) <= 1;
-
-set DC := {
-    <1,2>, <1,3>, <2,3>, <2,4>, <3,4>, <3,5>, <4,5>,
-    <9,10>, <9,11>, <10,11>, <10, 12>, <11,12>
-};
-
-###############
-# 2. 2 días de por medio
-###############
-subto NoCercanos_1:
-  forall <p,q> in E do
-    forall <d1,d2> in DC do
-        (sum <t> in T: X[p,d1,t])
-      + (sum <t> in T: X[q,d2,t]) <= 1;
-
-subto NoCercanos_2:
-  forall <p,q> in E do
-    forall <d1,d2> in DC do
-        (sum <t> in T: X[p,d2,t])
-      + (sum <t> in T: X[q,d1,t]) <= 1;
+param P_MAX := 208;
+subto CantParcialesFijada:
+    sum <p,d,t> in P * D * T: X[p,d,t] == P_MAX;
+#“Tenés que programar exactamente la misma cantidad de parciales que en el ejercicio 1;
+#dentro de ese conjunto, maximizá la dispersión”.
 
 ###############################################################
 # Z[p,q,d1,d2] = 1 <=> p está asignado al día d1 y q en d2

@@ -24,8 +24,8 @@
 	pdftitle={\titulo},
 	pdfauthor={\autor},
 	colorlinks=true,
-	linkcolor=blue,
-	citecolor=blue,
+	linkcolor=black,
+	citecolor=black,
 	urlcolor=blue
 }
 
@@ -41,125 +41,535 @@
 
 % Índices
 \tableofcontents
-\listoffigures
-\listoftables
 \clearpage
 
 \section{Consigna 1: Asignación de parciales}
 
-\subsection{Definición de conjuntos, parámetros y variables}
-Para comenzar, definiremos los conjuntos con los que vamos a trabajar a lo largo del proyecto (algunos de ellos mencionados en el enunciado):
+\subsection{Definición del problema y datos}
+
+El objetivo es programar los segundos parciales de un conjunto de cursos $P$ en el período comprendido entre el 1/12 y el 12/12, excluyendo los días 6/12, 7/12 y 8/12 (fin de semana y feriado). Para cada día hábil se dispone de cuatro horarios posibles: 9:00, 12:00, 15:00 y 18:00.
+
+Cada parcial $p \in P$ requiere una cantidad $a_p \in \mathbb{Z}_+$ de aulas. Además, se dispone de un grafo de incompatibilidad $G = (P, E)$, donde cada arista $(p,q) \in E$ indica que los parciales $p$ y $q$ tienen estudiantes en común y no pueden tomarse en el mismo día y horario.
+
+En cada día y horario (slot) existen como máximo $A = 75$ aulas disponibles (solo es necesario garantizar que la suma de aulas requeridas nunca supere este límite).
+
+El enunciado también establece que: ``No siempre será posible programar todos los parciales cumpliendo las restricciones, y en ese caso buscamos maximizar la cantidad de parciales programados.''
+
+\subsection{Conjuntos, parámetros y variables}
+
+Trabajamos con los siguientes conjuntos y parámetros:
 \begin{itemize}
-    \item $P$: Conjunto de parciales (índices p), que interpretaremos como un equivalente a conjunto de cursos (dado que solo hay un parcial por curso).
-    \item $D$: Conjunto de días disponibles para asignar parciales, donde $D = (1, 2, 3, \dots, 12) - (6, 7, 8)$
-    \item $T$: Horarios disponibles por días, donde $T = (9, 12, 15, 18)$ (índices t)
-    \item $a_p \in Z_+$: Número de aulas que requiere el parcial $p \ \ \forall \ \ p \in P$ 
-    \item $A$: Aulas totales disponibles en cada slot ($A = 75$)
-    \item $E$: Conjunto de pares incompatibles $(p, q)$. Si $(p, q) \in E \rightarrow $ no pueden coincidir en el mismo slot.
+    \item $P$: conjunto de parciales (índice $p$). En los datos provistos hay en total 208 parciales, identificados como $P0, P1, \dots, P207$.
+    \item $D$: conjunto de días hábiles del período de examen:
+    \[
+      D = \{1, 2, 3, 4, 5, 9, 10, 11, 12\}.
+    \]
+    \item $T$: conjunto de horarios disponibles:
+    \[
+      T = \{9, 12, 15, 18\}.
+    \]
+    \item $a_p \in \mathbb{Z}_+$: cantidad de aulas requeridas por el parcial $p$, leída del archivo \texttt{cursos.dat}.
+    \item $A = 75$: cantidad total de aulas disponibles por cada día y horario.
+    \item $E \subseteq P \times P$: conjunto de pares incompatibles $(p,q)$, obtenido del archivo 
+    
+    \texttt{estudiantes-en-comun.dat}. Si $(p,q) \in E$, entonces $p$ y $q$ no pueden coincidir en el mismo día y horario.
 \end{itemize}
 
-Ahora, tambien definimos la variable indicadora $x_{p,d,t} \in \{0,1\}$ que nos señala si un parcial $p$ está asignado al slot $d,t$. $x_{p,d,t} = 1$ si el parcial se programa en el slot $(d, t)$, y 0 en caso contrario.
+Definimos la siguiente variable de decisión binaria:
+\[
+x_{pdt} =
+\begin{cases}
+1 & \text{si el parcial } p \text{ se programa el día } d \text{ a la hora } t,\\
+0 & \text{en caso contrario.}
+\end{cases}
+\]
 
-\subsection{Razonamiento detrás de la función objetivo}
+\subsection{Modelo de programación lineal entera}
 
-El objetivo principal del problema planteado es determinar en qué día y horario tomar cada uno de los parciales, respetando restricciones de incompatibilidad y disponibilidad de aulas. El enunciado establece explícitamente que:
+\subsubsection*{Función objetivo}
 
-\begin{quote}
-“No siempre será posible programar todos los parciales cumpliendo las restricciones, y en ese caso buscamos maximizar la cantidad de parciales programados.”
-\end{quote}
+Buscamos maximizar la cantidad de parciales efectivamente programados. Dado que cada parcial puede aparecer como mucho en un slot (ver Restricción 1), la suma de todas las $x_{pdt}$ cuenta exactamente cuántos parciales fueron asignados:
+\begin{equation}
+\max \sum_{p \in P} \sum_{d \in D} \sum_{t \in T} x_{pdt}.
+\label{consigna1:objetivo}
+\end{equation}
 
-A partir de esta indicación, la función objetivo elegida es:
+\subsubsection*{Restricciones}
 
-\begin{equation*}
-\max \sum_{p \in P} \sum_{d \in D} \sum_{t \in T} x_{p,d,t}
-\end{equation*}
+\paragraph{(1) A lo sumo un slot por parcial.}
 
-\textbf{Sujeto a:}
+Cada parcial puede ser asignado, como máximo, a un único día y horario:
+\begin{equation}
+\sum_{d \in D} \sum_{t \in T} x_{pdt} \le 1 
+\qquad \forall p \in P.
+\label{consigna1:unslot}
+\end{equation}
 
-% Restricción 1
-\begin{equation*}
-\sum_{p\in P} x_{p,d,t} \le 1 
-\qquad \forall p\in P
-\tag{1}
-\end{equation*}
-Que los parciales asignados solo estén asignados a un slot.
+Esta restricción permite que algunos parciales queden sin programar (todas sus $x_{pdt} = 0$), lo cual es coherente con el objetivo de maximizar la cantidad de parciales asignados.
 
-% Restricción 2
-\begin{equation*}
-\sum_{p\in P} a_p x_{p,d,t} \le 75 
-\qquad \forall d\in D, \forall t\in T
-\tag{2}
-\end{equation*}
-Que todos los parciales asignados no superen la cantidad de aulas disponibles por día.
+\paragraph{(2) Capacidad de aulas.}
 
-% Restricción 3
-\begin{equation*}
-x_{p,d,t} + x_{q,d,t} \le 1 
-\qquad \forall (p,q)\in E, \forall d\in D, \forall t\in T
-\tag{3}
-\end{equation*}
-No pueden haber dos parciales asignados al mismo slot si tienen alumnos que cursan ambas materias.
+En cada combinación de día y horario, la cantidad total de aulas requeridas por los parciales asignados no puede superar las 75 aulas disponibles:
+\begin{equation}
+\sum_{p \in P} a_p \, x_{pdt} \le A 
+\qquad \forall d \in D,\ \forall t \in T.
+\label{consigna1:capacidad}
+\end{equation}
+
+\paragraph{(3) Incompatibilidades por alumnos en común.}
+
+Si dos parciales tienen estudiantes en común, no pueden tomarse en el mismo día y horario:
+\begin{equation}
+x_{pdt} + x_{qdt} \le 1
+\qquad \forall (p,q) \in E,\ \forall d \in D,\ \forall t \in T.
+\label{consigna1:conflictos}
+\end{equation}
+
+\paragraph{(4) Dominio de las variables.}
+\begin{equation}
+x_{pdt} \in \{0,1\}
+\qquad \forall p \in P,\ \forall d \in D,\ \forall t \in T.
+\label{consigna1:dominio}
+\end{equation}
+
+\subsection{Implementación en ZIMPL y uso de los datos}
+
+El modelo se implementó en ZIMPL de la siguiente manera (fragmento relevante):
+\begin{lstlisting}[language=,basicstyle=\ttfamily\small]
+set P := {read "cursos.dat" as "<1s>"};
+set D := {1, 2, 3, 4, 5, 9, 10, 11, 12};
+set T := {9, 12, 15, 18};
+
+param a[P] := read "cursos.dat" as "<1s> 2n";
+param A_S := 75;
+
+set E := {read "estudiantes-en-comun.dat" as "<1s,2s>"};
+
+var X[P * D * T] binary;
+
+maximize parciales_asignados:
+    sum <p,d,t> in P*D*T: X[p,d,t];
+
+subto UnSlot:
+    forall <p> in P do
+        sum <d,t> in D*T: X[p,d,t] <= 1;
+
+subto Capacidad:
+    forall <d,t> in D*T do
+        sum <p> in P: a[p] * X[p,d,t] <= A_S;
+
+subto Conflicto:
+    forall <p,q> in E do
+        forall <d,t> in D*T do
+            X[p,d,t] + X[q,d,t] <= 1;
+\end{lstlisting}
 
 \subsection{Resultados y conclusiones}
-El modelo fue ejecutado con los datos provistos y la solución obtenida se exportó a un archivo CSV para facilitar su interpretación y análisis.
-A partir de esta salida, observamos que:
+
+A partir de la salida obtenida, se observaron los siguientes resultados:
 \begin{itemize}
-    \item Se logró asignar la totalidad de los parciales (208 cursos) a algún día y horario disponible.
-    \item Ningún par de cursos con estudiantes en común fue programado en el mismo día y horario, lo cual confirma que todas las restricciones de incompatibilidad se cumplieron.
-    \item La suma de aulas requeridas en cada slot nunca superó el límite de 75 aulas, por lo que todas las restricciones de capacidad fueron respetadas.
-    \item Si bien la asignación resultó óptima en cuanto a cantidad de parciales programados, la solución presenta una alta concentración de parciales en los primeros días, lo que es esperable dado 
-	que la función objetivo no penaliza dicha concentración ni incentiva la distribución equitativa a lo largo del calendario.
+    \item En los datos provistos hay un total de 208 parciales. El modelo logró asignar los 208 parciales a algún día y horario factible. Es decir, la solución óptima alcanza el máximo posible de la función objetivo \eqref{consigna1:objetivo}.
+    \item La condición de incompatibilidad (3) se respeta en todos los casos: ningún par de cursos con estudiantes en común fue programado en el mismo día y horario.
+    \item La restricción de capacidad (2) también se verifica. Al calcular la suma de aulas $\sum_{p} a_p x_{pdt}$ para cada slot $(d,t)$, el valor máximo resultó ser de 67 aulas, estrictamente por debajo del límite de 75.
 \end{itemize}
+
+La distribución de parciales por día se resume en la Tabla~\ref{tab:distribucion-parciales-dia}:
+\begin{table}[H]
+    \centering
+    \begin{tabular}{cc}
+        \toprule
+        Día & Cantidad de parciales asignados \\
+        \midrule
+         1 & 47 \\
+         2 & 25 \\
+         3 & 11 \\
+         4 & 16 \\
+         5 & 11 \\
+         9 & 35 \\
+        10 & 30 \\
+        11 &  5 \\
+        12 & 28 \\
+        \bottomrule
+    \end{tabular}
+    \caption{Distribución de parciales programados por día.}
+    \label{tab:distribucion-parciales-dia}
+\end{table}
+
+A partir de esta distribución se observa que:
+\begin{itemize}
+    \item La solución utiliza prácticamente todos los slots disponibles (35 de los 36 posibles), lo cual es esperable dado que se busca maximizar la cantidad de parciales programados.
+    \item Existe cierta concentración de parciales en los días 1, 9, 10 y 12, mientras que el día 11 tiene una carga relativamente menor. Esta asimetría es coherente con la función objetivo elegida, que sólo maximiza el número de parciales asignados y no incluye criterios de equidad en la distribución temporal.
+\end{itemize}
+
+En resumen, el modelo de programación lineal entera propuesto resulta suficiente para:
+\begin{enumerate}
+    \item Representar adecuadamente las restricciones de incompatibilidad y capacidad del sistema.
+    \item Encontrar una solución en la que se programan todos los parciales dentro del horizonte de planificación y con las aulas disponibles.
+\end{enumerate}
 
 \section{Consigna 2: Extensión con restricción adicional}
-Si bien el enunciado no nos provee información individual sobre qué estudiantes cursan qué materias, sí contamos con el grafo de incompatibilidad $G = (P, E)$, donde cada arista $(p,q)$ indica que los cursos $p$ y $q$ tienen estudiantes en común.
 
-Esta limitación es importante: \textbf{no podemos modelar explícitamente estudiantes individuales}, sino únicamente relaciones entre cursos. Por lo tanto, debemos buscar una forma de asegurar que no existan “tripletes” de parciales mutuamente relacionados que caigan el mismo día.
-\subsection{Razonamiento detrás del modelo}
+En esta consigna se agrega una nueva condición: queremos impedir que haya estudiantes rindiendo tres parciales el mismo día. En términos del grafo de incompatibilidad $G = (P,E)$, el enunciado lo expresa como:
+``no queremos que haya tres vértices vecinos en $G$ programados un mismo día''
 
-El enunciado establece que queremos evitar que “haya tres vértices vecinos en $G$ programados un mismo día”. Esto implica que si tres materias $p$, $q$ y $r$ tienen estudiantes en común (es decir, si forman un triángulo en el grafo de incompatibilidad), entonces no pueden ser asignadas todas al mismo día.
+Es decir, si tres parciales $p, q, r \in P$ forman un triángulo en $G$ (los tres pares $(p,q)$, $(p,r)$ y $(q,r)$ pertenecen a $E$), entonces no se permite que los tres estén programados el mismo día, aun cuando estén en horarios distintos.
 
-Sin embargo, dado que la estructura del grafo no necesariamente es simple, el problema consiste en traducir esa idea a una restricción operativa que use las herramientas disponibles en el modelo.
+Como en la consigna 1, trabajamos sólo con información de cursos y su grafo de incompatibilidad; no tenemos información de estudiantes individuales, de modo que debemos modelar esta restricción a partir de la estructura del grafo.
 
-La clave del razonamiento es:
+\subsection{Modificación del modelo}
 
+La idea es mantener:
 \begin{itemize}
-\item Para cada parcial $p$, la suma $\sum_{t \in T} x_{p,(d,t)}$ indica si el parcial fue programado en el día $d$.
-\item Si dos cursos $p$ y $q$ son adyacentes en $G$, ya hay una restricción que impide que estén en el mismo \textit{slot}, pero no impide que estén el mismo día en horarios distintos.
-\item Para evitar que un estudiante tenga \textbf{tres parciales el mismo día}, no es suficiente controlar pares: necesitamos controlar \textbf{conjuntos de tres cursos que comparten estudiantes}.
+    \item la misma función objetivo (maximizar la cantidad de parciales programados),
+    \item las restricciones de un único slot por parcial,
+    \item las restricciones de capacidad de aulas,
+    \item y las restricciones de incompatibilidad por slot,
+\end{itemize}
+y sumar una familia adicional de restricciones que impida que los tríos de cursos completamente incompatibles (triángulos en $G$) se programen todos en el mismo día.
+
+\subsubsection*{Tríos completamente incompatibles}
+
+Primero, definimos el conjunto de tríos $(p,q,r)$ tales que todos los pares son incompatibles:
+\[
+A = \Big\{ (p,q,r) \in P^3 :
+\ p \neq q,\ p \neq r,\ q \neq r,\ 
+(p,q)\in E,\ (p,r)\in E,\ (q,r)\in E \Big\}.
+\]
+
+En ZIMPL, esto se implementó como:
+\begin{lstlisting}[basicstyle=\ttfamily\small]
+set A := {
+    <p,q,r> in P * P * P
+    with
+        p != q and p != r and q != r
+        and <p,q> in E
+        and <p,r> in E
+        and <q,r> in E
+};
+\end{lstlisting}
+
+Cada trío en $A$ representa tres parciales que están mutuamente conectados en el grafo de incompatibilidad.
+
+\subsubsection*{Nueva restricción: no tres del mismo trío en el mismo día}
+
+Recordemos que, para un parcial $p$ y un día $d$, la suma:
+\[
+\sum_{t \in T} x_{pdt}
+\]
+indica si el parcial $p$ se programa (en algún horario) el día $d$.
+
+La restricción que agregamos es, entonces:
+\begin{equation}
+\sum_{t \in T} x_{pdt}
++ \sum_{t \in T} x_{qdt}
++ \sum_{t \in T} x_{rdt}
+\;\le\; 2
+\qquad \forall (p,q,r)\in A,\ \forall d \in D.
+\label{consigna2:trioconflicto}
+\end{equation}
+
+Esta desigualdad asegura que, para cualquier trío completamente incompatible $(p,q,r)$, a lo sumo dos de esos parciales pueden ser programados el mismo día (en cualquiera de los cuatro horarios disponibles). Dicho de otra forma: ningún estudiante que curse esas tres materias podría tener los tres parciales el mismo día.
+
+En ZIMPL, la restricción se implementó como:
+\begin{lstlisting}[basicstyle=\ttfamily\small]
+subto TrioConflicto:
+  forall <p,q,r> in A do
+    forall <d> in D do
+      (sum <t> in T: X[p,d,t])
+    + (sum <t> in T: X[q,d,t])
+    + (sum <t> in T: X[r,d,t]) <= 2;
+\end{lstlisting}
+
+\subsection{Modelo completo modificado}
+
+El resto del modelo se mantiene igual que en la Consigna 1:
+\begin{itemize}
+    \item Función objetivo:
+    \[
+      \max \sum_{p \in P} \sum_{d \in D} \sum_{t \in T} x_{pdt}.
+    \]
+    \item Un único slot por parcial:
+    \[
+      \sum_{d \in D} \sum_{t \in T} x_{pdt} \le 1 \quad \forall p \in P.
+    \]
+    \item Capacidad de aulas por día y horario:
+    \[
+      \sum_{p \in P} a_p x_{pdt} \le 75 \quad \forall d \in D,\ \forall t \in T.
+    \]
+    \item Incompatibilidades por slot:
+    \[
+      x_{pdt} + x_{qdt} \le 1 \quad \forall (p,q)\in E,\ \forall d \in D,\ \forall t \in T.
+    \]
+    \item Dominio:
+    \[
+      x_{pdt} \in \{0,1\} \quad \forall p,d,t.
+    \]
+    \item Nueva restricción de tríos (Ec.~\eqref{consigna2:trioconflicto}).
 \end{itemize}
 
-Pero como no conocemos explícitamente esos tripletes, debemos inferirlos del grafo. \\
+\subsection{¿Se puede resolver en tiempos de cómputo razonables?}
 
-La aproximación práctica es:
+Desde el punto de vista teórico, el agregado de las restricciones de tríos:
+\begin{itemize}
+    \item incrementa el número de restricciones del modelo (hay una desigualdad por cada trío en $A$ y por cada día $d \in D$),
+    \item y, por lo tanto, vuelve el problema más grande y potencialmente más costoso de resolver.
+\end{itemize}
 
-\textbf{Si un parcial $p$ tiene varios vecinos en el grafo, y tres de ellos se planifican el mismo día, entonces podría existir un estudiante en común afectado.} \\
+Sin embargo, en la instancia concreta de este trabajo:
+\begin{itemize}
+    \item el número total de parciales es moderado (208 cursos),
+    \item el grafo de incompatibilidad no es completo (no todos los cursos están conectados entre sí),
+    \item y el solver \texttt{SCIP} fue capaz de resolver el modelo extendido en tiempos de cómputo razonables, sin problemas de memoria ni tiempos excesivos.
+\end{itemize}
 
+\subsection{Impacto sobre la cantidad máxima de parciales programados}
 
-Ahora ¿Cómo lo resolvimos?
-Primero, generamos todos los trios compatibles que compartan al menos algún alumno en común. \\
+Al volver a resolver el modelo con la nueva familia de restricciones, observamos que:
+\begin{itemize}
+    \item se siguen pudiendo programar los 208 parciales dentro del período y con las 75 aulas disponibles por slot;
+    \item es decir, la nueva restricción \eqref{consigna2:trioconflicto} no reduce la cantidad máxima de parciales que pueden asignarse.
+\end{itemize}
 
-Luego, sujeto a maximizar la cantidad de parciales:
+Lo que sí cambia es la distribución temporal de los parciales. La solución óptima del modelo extendido concentra más exámenes en los primeros días (1 al 5) y utiliza mucho menos los días 9, 10, 11 y 12.
 
-\begin{equation*}
-\sum_{p, d, t\in P\dot D\dot T}  x_{p,d,t}
-\qquad \forall d\in D, \forall t\in T
-\end{equation*}
+La Tabla~\ref{tab:distribucion-parciales-dia-consigna2} muestra la cantidad de parciales programados por día con la restricción de tríos:
+\begin{table}[H]
+    \centering
+    \begin{tabular}{cc}
+        \toprule
+        Día & Cantidad de parciales asignados \\
+        \midrule
+         1 & 59 \\
+         2 & 46 \\
+         3 & 30 \\
+         4 & 27 \\
+         5 & 21 \\
+         9 & 11 \\
+        10 &  9 \\
+        11 &  4 \\
+        12 &  1 \\
+        \bottomrule
+    \end{tabular}
+    \caption{Distribución de parciales programados por día con la restricción de tríos.}
+    \label{tab:distribucion-parciales-dia-consigna2}
+\end{table}
 
-Pero, restringiendo que no se pueda asignar un parcial a un día si:
-\begin{equation*}
-    \sum_{t \in T} x_{p,d,t}
-    + \sum_{t \in T} x_{q,d,t}
-    + \sum_{t \in T} x_{r,d,t} \le 2
-\qquad \forall (p,q,r)\in A, \forall d\in D
-\end{equation*}
+Comparado con la distribución obtenida en la Consigna 1, se observa:
+\begin{itemize}
+    \item un uso mucho más intensivo de los días 1 a 5,
+    \item y una utilización muy baja de los días finales (en particular, el día 12 casi no se usa).
+\end{itemize}
 
-Volvimos a resolver el modelo con esta modificación y, al igual que en la consigna 1, exportamos la solución a un archivo CSV para analizarla. El resultado muestra que se siguen pudiendo programar los 208 parciales, es decir, la nueva restricción no reduce la cantidad máxima de exámenes que pueden asignarse dentro del calendario disponible.
+Esta reasignación es coherente con el nuevo requisito: el modelo debe evitar que los tríos de cursos completamente incompatibles caigan el mismo día, pero al mismo tiempo intenta mantener el máximo número de parciales asignados. El solver encuentra una forma de reorganizar los exámenes en el calendario respetando todas las restricciones (capacidad, incompatibilidades por slot y tríos) sin sacrificar la cantidad total de parciales programados.
 
-Sin embargo, la distribución de parciales a lo largo de los días cambia respecto del modelo anterior: se observa una mayor concentración en los primeros días (1 al 5) y una menor utilización de los últimos días (9 al 12). Esto refleja que, al imponer la restricción de tríos, el modelo reorganiza la programación para evitar que un mismo estudiante enfrente tres parciales en un solo día, manteniendo al mismo tiempo la viabilidad del calendario y el cumplimiento de todas las restricciones de incompatibilidad y capacidad de aulas.
+En conclusión:
+\begin{enumerate}
+    \item El modelo se modifica agregando el conjunto de tríos $A$ y las restricciones de la forma \eqref{consigna2:trioconflicto}.
+    \item El problema sigue siendo resoluble en tiempos de cómputo razonables para la instancia analizada.
+    \item La cantidad máxima de parciales programados no cambia (se siguen asignando los 208), aunque la distribución de los exámenes a lo largo de los días se ve afectada por la nueva restricción.
+\end{enumerate}
 
-\section{Consigna 3: Maximización de la separación temporal}
-\section{Resultados generales y discusión}
-\section{Conclusiones}
+\section{Comparación entre Consigna 1 y Consigna 2}
+
+En las secciones anteriores vimos que tanto el modelo base (Consigna 1) como el modelo extendido con tríos incompatibles (Consigna 2) permiten programar los 208 parciales dentro del período disponible y respetando la capacidad de aulas. 
+
+La diferencia entre ambos enfoques no está en la factibilidad global del problema, sino en cómo se distribuyen los exámenes a lo largo de los días. En esta sección resumimos esa diferencia.
+
+\subsection{Distribución de parciales por día}
+
+La Tabla~\ref{tab:comparacion-consigna1-consigna2} muestra la cantidad de exámenes programados en cada día del período considerado, comparando ambos modelos.
+\begin{table}[H]
+    \centering
+    \begin{tabular}{ccc}
+        \toprule
+        Día & Consigna 1 & Consigna 2 \\
+        \midrule
+         1 & 47 & 59 \\
+         2 & 25 & 46 \\
+         3 & 11 & 30 \\
+         4 & 16 & 27 \\
+         5 & 11 & 21 \\
+         9 & 35 & 11 \\
+        10 & 30 &  9 \\
+        11 &  5 &  4 \\
+        12 & 28 &  1 \\
+        \bottomrule
+    \end{tabular}
+    \caption{Comparación de parciales programados por día entre ambos modelos.}
+    \label{tab:comparacion-consigna1-consigna2}
+\end{table}
+
+\subsection{Visualización comparativa}
+
+En la Figura~\ref{fig:comparacion-parciales} se presenta un gráfico de barras que resume visualmente las diferencias entre ambas soluciones.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{comparacion_1vs2.png}
+    \caption{Parciales programados por día: comparación entre Consigna 1 y Consigna 2.}
+    \label{fig:comparacion-parciales}
+\end{figure}
+
+\subsection{Análisis}
+
+Los datos muestran que, aunque ambos modelos asignan los mismos 208 parciales, la restricción adicional de tríos tiene un impacto notable en la distribución temporal de los exámenes:
+\begin{itemize}
+    \item Los días 1 a 5 concentran ahora una mayor cantidad de parciales en la Consigna 2.
+    \item Los días 9, 10 y 12, que en la Consigna 1 tenían una carga sustancial, pasan a tener una utilización muy baja (en particular, el día 12 casi no se usa).
+\end{itemize}
+
+En síntesis, la restricción sobre los tríos no altera la viabilidad del problema, pero sí cambia de forma importante la estructura del calendario: se redistribuyen exámenes hacia los primeros días para cumplir con las nuevas condiciones sin sacrificar la cantidad total de parciales programados.
+
+\section{Consigna 3: Maximización de la dispersión entre parciales}
+
+En esta consigna se introduce un nuevo objetivo: maximizar la dispersión temporal de los parciales entre los estudiantes. La motivación es evitar que un estudiante que cursa varias materias tenga todos sus exámenes concentrados en pocos días consecutivos.
+
+El desafío principal es que el enunciado aclara que \emph{no contamos con los datos individuales de los estudiantes}. Sólo conocemos, para cada par de cursos $(p,q)$, la cantidad de estudiantes en común $I_{pq}$. Por lo tanto, cualquier modelo posible debe construirse únicamente a partir de la estructura del grafo de incompatibilidades y de estos pesos.
+Para simplificar la complejidad de búsqueda de soluciones, decidimos redefinir el significado de "dispersión". No vamos a buscar cualquier tipo de separación entre parciales que comparten alumnos entre sí, sino más bien una cantidad de días de separación pactada con anterioridad. Así,
+podemos transformar el problema en uno mucho más manejable, ya que solo necesitamos verificar si la distancia temporal entre dos parciales cumple con el umbral establecido.
+
+\subsection{Idea general para construir una función objetivo}
+
+Si dos materias $p$ y $q$ tienen muchos estudiantes en común ($I_{pq}$ grande), entonces es deseable que sus parciales se programen lo más separados posible en el calendario. Si se asignan al mismo día o a días consecutivos, los estudiantes compartidos enfrentan una carga excesiva en un período muy corto.
+
+Con esta información limitada, la estrategia razonable consiste en:
+\begin{itemize}
+    \item asignar un ``beneficio'' proporcional a la distancia en días entre dos parciales;
+    \item ponderar ese beneficio por la cantidad de estudiantes en común $I_{pq}$;
+    \item y formar una función objetivo que premie asignar lejos y castigue asignar cerca.
+\end{itemize}
+
+Esto lleva naturalmente a una expresión del tipo:
+\[
+\max \sum_{(p,q)\in E} \sum_{d_1\in D} \sum_{d_2\in D}
+I_{pq} \cdot |d_1 - d_2| \cdot Z_{pq,d_1,d_2},
+\]
+donde $Z_{pq,d_1,d_2}=1$ si el curso $p$ está asignado al día $d_1$ y $q$ al día $d_2$.
+
+\subsection{Modelado con variables auxiliares}
+
+Como la función objetivo depende de la distancia entre los días asignados, es necesario introducir la variable auxiliar:
+\[
+Z_{pq,d_1,d_2} =
+\begin{cases}
+1 & \text{si } p \text{ está en el día } d_1 \text{ y } q \text{ en el día } d_2, \\
+0 & \text{en otro caso}.
+\end{cases}
+\]
+
+Esta variable se vincula con $X_{pdt}$ mediante restricciones del tipo:
+\[
+Z_{pq,d_1,d_2} \le \sum_{t\in T} X_{p,d_1,t},
+\qquad
+Z_{pq,d_1,d_2} \le \sum_{t\in T} X_{q,d_2,t},
+\]
+\[
+Z_{pq,d_1,d_2} \ge \sum_{t\in T} X_{p,d_1,t}
+              + \sum_{t\in T} X_{q,d_2,t} - 1.
+\]
+
+Estas restricciones fuerzan que $Z$ sea igual a 1 sólo cuando ambos cursos están asignados exactamente a esos días.
+
+\subsection{Dos enfoques propuestos}
+
+En el trabajo se experimentó con dos variantes del modelo:
+\begin{enumerate}
+    \item Versión 1: evitar mismos días y días consecutivos.\\
+    Además de la maximización de dispersión, se agrega la restricción de que dos cursos con estudiantes en común no puedan rendir:
+    \begin{itemize}
+        \item el mismo día;
+        \item ni dos días consecutivos.
+    \end{itemize}
+
+    \item Versión 2: extender la distancia mínima entre días.\\
+    Se prohíbe que dos cursos ligados por una arista del grafo se tomen con 0, 1 o incluso 2 días de diferencia. Esto fuerza una separación aún mayor y favorece una dispersión más agresiva.
+\end{enumerate}
+
+Ambas versiones mantienen todas las restricciones previas: capacidad de aulas, asignación única por parcial y consistencia de las variables.
+
+\subsection{Resultados obtenidos}
+\subsubsection{Distribución comparada de parciales por día}
+
+La Tabla~\ref{tab:comparacion-ej3} muestra cuántos parciales quedaron programados en cada día en ambas versiones.
+\begin{table}[H]
+    \centering
+    \begin{tabular}{ccc}
+        \toprule
+        Día & Versión 1 & Versión 2 \\
+        \midrule
+         1 & 30 & 27 \\
+         2 &  1 &  0 \\
+         3 & 24 &  0 \\
+         4 &  0 & 27 \\
+         5 & 19 & 18 \\
+         9 & 24 & 18 \\
+        11 & 16 &  0 \\
+        12 &  0 & 22 \\
+        \bottomrule
+    \end{tabular}
+    \caption{Cantidad de parciales programados por día en ambas versiones del modelo de dispersión.}
+    \label{tab:comparacion-ej3}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{comparacion_3_versiones.png}
+    \caption{Ejercicio 3: comparación de parciales por día entre la Versión 1 y la Versión 2.}
+    \label{fig:comparacion-ej3}
+\end{figure}
+
+El análisis muestra diferencias marcadas entre ambas versiones:
+\begin{itemize}
+    \item La Versión 1 asigna parciales en más días, aunque con fuertes concentraciones (por ejemplo, días 1, 3 y 9), y programa en total 114 parciales.
+    \item La Versión 2 asigna menos días pero con separaciones aún mayores, concentrando los exámenes en pocos días muy alejados entre sí y reduciendo la cantidad total a 94 parciales.
+\end{itemize}
+
+En ambos casos, la cantidad de parciales programados es muy inferior a los 208 que se lograban en las consignas 1 y 2. Esto cuantifica de forma clara el trade-off discutido previamente: cuanto más se fuerza la dispersión temporal entre materias con estudiantes en común, menor es el número de exámenes que puede programarse dentro de un calendario acotado.\\
+
+\textbf{Parciales asignados}\\
+En ambas variantes se observa un fenómeno importante:
+\begin{itemize}
+    \item La función objetivo ya no busca maximizar la cantidad de parciales asignados, sino la dispersión ponderada por estudiantes en común. 
+    \item Como consecuencia, la solución puede dejar muchos cursos sin asignar o agruparlos únicamente en los días que permiten mayor separación relativa.
+\end{itemize}
+
+En los resultados presentados, las dos versiones asignaron únicamente una fracción de los 208 parciales. Estas se tratan solo de soluciones parciales en ejecución por 3hs. La distribución se concentra fuertemente en grupos muy separados entre sí, lo cual es coherente con el objetivo de maximizar $|d_1 - d_2|$.  
+
+Es decir: el modelo prefirió \emph{asignar menos parciales} pero lograr una dispersión muy alta entre los que comparten estudiantes.
+
+En particular, al sumar la cantidad de parciales asignados por día se obtiene que:
+\begin{itemize}
+    \item La Versión 1 programa en total 114 parciales.
+    \item La Versión 2 programa en total 94 parciales.
+\end{itemize}
+
+Ambos valores son sensiblemente menores a los 208 parciales que se lograban programar en las consignas 1 y 2, lo que cuantifica el costo de imponer una dispersión temporal muy estricta.\\
+
+\textbf{Dispersión}\\
+Por otro lado, para comparar la dispersión que se obtuvo en ambas versiones analizamos los valores objetivo obtenidos:
+\begin{itemize}
+    \item La Versión 1 encontró una valor objetivo de 25069.
+    \item La Versión 2 encontró una valor objetivo de 23183.
+\end{itemize}
+Debido a la función objetivo definida, si dos cursos comparten pocos alumnos, que estén juntos o separados no mueve mucho la FO.
+En cambio, si dos cursos comparten muchos alumnos, entonces separarlos en días le da un aporte grande a la FO.
+Si bien la Versión 2 impone más dispersión mínima como restricción dura, esto no implica un mayor valor de la función objetivo. Nuestra FO mide la dispersión total ponderada, es decir, 
+la suma para todos los pares de cursos con alumnos en común de: \[I_{pq} \cdot |d_1 - d_2|\]
+Al endurecer demasiado las restricciones, la Versión 2:
+\begin{itemize}
+    \item Vuelve más difícil asignar parciales, ya que no existen suficientes días disponibles para cumplir todas las separaciones mínimas exigidas.
+    \item Obliga al modelo a dejar cursos sin programar para no violar las restricciones.
+    \item Disminuye la cantidad de pares (p,q) que entran en la suma de la función objetivo.
+\end{itemize}
+Como resultado, aunque los pocos pares que logran asignarse en la Versión 2 pueden estar muy separados, el número total de pares contribuyendo a la dispersión cae drásticamente, y eso 
+hace que el valor global de la FO sea menor que en la Versión 1.\\
+
+\section{Conclusión}
+De esta comparación sacamos la conclusión de que hay un trade-off entre:
+\begin{itemize}
+    \item Imponer la dispersión como restricción, lo que vuelve muy difícil encontrar asignaciones factibles y reduce la cantidad de exámenes asignados.
+    \item Tratar la dispersión solamente como criterio de optimización, lo cual permite que el modelo tenga libertad para asignar los parciales y luego optimizar su distribución temporal.
+\end{itemize}
+Entonces, maximizar la dispersión suele entrar en conflicto directo con maximizar la cantidad de exámenes programados.
+
 
 \end{document}

@@ -1,9 +1,9 @@
 import csv
 
 # ==== CONFIGURACIÓN DE ARCHIVOS ====
-SOL_FILE = "solucion1.txt"
+SOL_FILE = "solucion3v1.txt"
 CURSOS_FILE = "cursos.dat"
-CSV_OUT = "tabla_ejercicio1.csv"
+CSV_OUT = "tabla_ejercicio3v1.csv"
 
 # 1) Leer los códigos de cursos en el mismo orden que ZIMPL
 cursos = []

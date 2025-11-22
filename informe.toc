@@ -1,10 +1,27 @@
 \babel@toc {spanish}{}\relax 
 \contentsline {section}{\numberline {1}Consigna 1: Asignación de parciales}{2}{section.1}%
-\contentsline {subsection}{\numberline {1.1}Definición de conjuntos, parámetros y variables}{2}{subsection.1.1}%
-\contentsline {subsection}{\numberline {1.2}Razonamiento detrás de la función objetivo}{2}{subsection.1.2}%
-\contentsline {subsection}{\numberline {1.3}Resultados y conclusiones}{3}{subsection.1.3}%
-\contentsline {section}{\numberline {2}Consigna 2: Extensión con restricción adicional}{3}{section.2}%
-\contentsline {subsection}{\numberline {2.1}Razonamiento detrás del modelo}{3}{subsection.2.1}%
-\contentsline {section}{\numberline {3}Consigna 3: Maximización de la separación temporal}{4}{section.3}%
-\contentsline {section}{\numberline {4}Resultados generales y discusión}{4}{section.4}%
-\contentsline {section}{\numberline {5}Conclusiones}{4}{section.5}%
+\contentsline {subsection}{\numberline {1.1}Definición del problema y datos}{2}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}Conjuntos, parámetros y variables}{2}{subsection.1.2}%
+\contentsline {subsection}{\numberline {1.3}Modelo de programación lineal entera}{2}{subsection.1.3}%
+\contentsline {paragraph}{(1) A lo sumo un slot por parcial.}{3}{section*.4}%
+\contentsline {paragraph}{(2) Capacidad de aulas.}{3}{section*.5}%
+\contentsline {paragraph}{(3) Incompatibilidades por alumnos en común.}{3}{section*.6}%
+\contentsline {paragraph}{(4) Dominio de las variables.}{3}{section*.7}%
+\contentsline {subsection}{\numberline {1.4}Implementación en ZIMPL y uso de los datos}{3}{subsection.1.4}%
+\contentsline {subsection}{\numberline {1.5}Resultados y conclusiones}{4}{subsection.1.5}%
+\contentsline {section}{\numberline {2}Consigna 2: Extensión con restricción adicional}{5}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Modificación del modelo}{5}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Modelo completo modificado}{6}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}¿Se puede resolver en tiempos de cómputo razonables?}{7}{subsection.2.3}%
+\contentsline {subsection}{\numberline {2.4}Impacto sobre la cantidad máxima de parciales programados}{7}{subsection.2.4}%
+\contentsline {section}{\numberline {3}Comparación entre Consigna 1 y Consigna 2}{8}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Distribución de parciales por día}{8}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Visualización comparativa}{9}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Análisis}{9}{subsection.3.3}%
+\contentsline {section}{\numberline {4}Consigna 3: Maximización de la dispersión entre parciales}{9}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Idea general para construir una función objetivo}{10}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}Modelado con variables auxiliares}{10}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}Dos enfoques propuestos}{11}{subsection.4.3}%
+\contentsline {subsection}{\numberline {4.4}Resultados obtenidos}{11}{subsection.4.4}%
+\contentsline {subsubsection}{\numberline {4.4.1}Distribución comparada de parciales por día}{11}{subsubsection.4.4.1}%
+\contentsline {section}{\numberline {5}Conclusión}{13}{section.5}%
